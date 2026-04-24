@@ -72,8 +72,6 @@ python app.py
 
 ## 🏗️ System Architecture
 
-## 🏗️ System Architecture
-
 ```mermaid
 flowchart TD
 
