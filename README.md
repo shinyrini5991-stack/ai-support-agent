@@ -72,26 +72,25 @@ python app.py
 
 ## 🏗️ System Architecture
 
+## 🏗️ System Architecture
+
 ```mermaid
 flowchart TD
 
-A[User Query] --> B[Input Handler (CLI)]
-B --> C[Safety Filter]
-C --> D{Unsafe Request?}
+A["User Query"] --> B["Input Handler"]
+B --> C["Safety Filter"]
+C --> D{"Unsafe Request?"}
 
-D -- Yes --> E[Refuse Response]
-D -- No --> F[Intent Detection]
+D -- Yes --> E["Refuse Response"]
+D -- No --> F["Intent Detection"]
 
-F --> G[Knowledge Base Retriever (RAG)]
-G --> H{Relevant Info Found?}
+F --> G["Retriever (RAG)"]
+G --> H{"Relevant Info Found?"}
 
-H -- Yes --> I[Return KB Answer]
-H -- No --> J[Groq LLM (Llama 3.1)]
+H -- Yes --> I["Return KB Answer"]
+H -- No --> J["Groq LLM"]
 
-J --> K[Final Response Generator]
+J --> K["Response Generator"]
 I --> K
 
-K --> L[User Output]
-
-C --> M[Escalation Trigger]
-M --> L
+K --> L["User Output"]
