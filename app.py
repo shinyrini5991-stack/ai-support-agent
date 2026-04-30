@@ -1,6 +1,5 @@
-import os
-import time
-import uuid
+# LATEST VERSION TEST
+import os, time, uuid
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
@@ -8,161 +7,227 @@ from langchain_groq import ChatGroq
 from sentence_transformers import SentenceTransformer
 import chromadb
 
-# ---------------- LOAD ENV ---------------- #
+# ---------------- ENV ---------------- #
 load_dotenv()
-
-groq_api_key = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 llm = ChatGroq(
-    api_key=groq_api_key,
+    api_key=GROQ_API_KEY,
     model="llama-3.1-8b-instant"
 )
 
-# ---------------- RAG SETUP ---------------- #
+# ---------------- EMBEDDING + DB ---------------- #
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
-chroma_client = chromadb.Client()
-collection = chroma_client.get_or_create_collection("support_kb")
+client = chromadb.Client()
+collection = client.get_or_create_collection("support_kb")
 
-# ---------------- STREAMLIT CONFIG ---------------- #
-st.set_page_config(page_title="AI Support Agent", layout="wide")
+# ---------------- STREAMLIT UI ---------------- #
+st.set_page_config(layout="wide")
 st.title("🤖 AI Support Resolution Agent")
 
 # ---------------- SESSION STATE ---------------- #
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
 if "feedback" not in st.session_state:
     st.session_state.feedback = {}
 
 # ---------------- SIDEBAR ---------------- #
-framework = st.sidebar.selectbox(
-    "Select Framework",
-    ["LangChain", "CrewAI", "LangGraph"]
+st.sidebar.header("⚙️ Controls")
+
+prompt_mode = st.sidebar.selectbox(
+    "Prompt Mode", ["basic", "strict"]
 )
 
-st.sidebar.markdown("### 📂 Upload CSV for Knowledge Base")
-file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
+if st.sidebar.button("🧹 Reset Chat"):
+    st.session_state.messages = []
 
-# ---------------- SAFETY FILTER ---------------- #
+# ---------------- SAFETY ---------------- #
 def is_unsafe(query):
-    unsafe_words = ["hack", "attack", "steal", "fraud", "illegal", "bypass"]
-    return any(word in query.lower() for word in unsafe_words)
+    unsafe_words = ["hack", "fraud", "attack", "illegal"]
+    return any(w in query.lower() for w in unsafe_words)
 
-# ---------------- RAG SEARCH ---------------- #
-def search_kb(query):
+# ---------------- TOOLS ---------------- #
+
+def kb_tool(query):
     try:
-        results = collection.query(
+        result = collection.query(
             query_embeddings=[embed_model.encode(query).tolist()],
             n_results=1
         )
-
-        if results and results["documents"][0]:
-            return results["documents"][0][0]
+        docs = result.get("documents", [[]])
+        if docs and docs[0]:
+            return docs[0][0]
     except:
-        pass
+        return None
     return None
 
-# ---------------- STREAMING ---------------- #
-def stream_text(text):
-    placeholder = st.empty()
-    output = ""
 
-    for char in text:
-        output += char
-        placeholder.markdown(output + "▌")
-        time.sleep(0.01)
-
-    return output
-
-# ---------------- AGENT ---------------- #
-def agent(query):
-
-    if is_unsafe(query):
-        return "❌ Request blocked due to safety policy."
-
-    kb_answer = search_kb(query)
-
-    if kb_answer:
-        return f"📘 Answer (RAG): {kb_answer}"
-
-    prompt = f"""
-You are a safe AI customer support assistant.
+def llm_tool(query):
+    try:
+        if prompt_mode == "basic":
+            prompt = f"Answer briefly: {query}"
+        else:
+            prompt = f"""
+You are a safe customer support agent.
 
 Rules:
-- Do not hallucinate
-- If unsure, say escalate
-- Be concise
+- Do NOT hallucinate
+- If unsure, say "I don't know"
+- Escalate sensitive issues
 
-Framework: {framework}
-
-User: {query}
+User Query: {query}
 """
+        return llm.invoke(prompt).content
+    except:
+        return "⚠️ System error. Escalating to human support."
 
-    res = llm.invoke(prompt)
-    return res.content
 
-# ---------------- CSV INGESTION ---------------- #
-if file is not None:
-    if st.sidebar.button("Generate Embeddings"):
-        df = pd.read_csv(file)
+def escalation_tool(query):
+    return "⚠️ This issue is escalated to human support."
 
-        for i, row in df.iterrows():
-            text = " ".join(str(x) for x in row.values)
-            emb = embed_model.encode(text).tolist()
+# ---------------- AGENT ---------------- #
 
-            collection.add(
-                documents=[text],
-                embeddings=[emb],
-                ids=[str(uuid.uuid4())]
-            )
+def agent(query):
+    trace = []
+    confidence = "Low"
 
-        st.sidebar.success("Embeddings stored successfully!")
+    # Safety
+    if is_unsafe(query):
+        return "❌ Unsafe request blocked.", ["Safety triggered"], "High"
 
-# ---------------- CHAT DISPLAY ---------------- #
+    trace.append("Safety passed")
+
+    # RAG
+    kb_result = kb_tool(query)
+    if kb_result:
+        trace.append("KB tool used (RAG)")
+        return f"📘 {kb_result}", trace, "High"
+
+    trace.append("No KB match")
+
+    # Escalation condition
+    if "urgent" in query.lower():
+        trace.append("Escalation tool used")
+        return escalation_tool(query), trace, "High"
+
+    # LLM fallback
+    trace.append("LLM tool used")
+    return llm_tool(query), trace, "Medium"
+
+# ---------------- STREAMING ---------------- #
+def stream(text):
+    box = st.empty()
+    output = ""
+    for char in text:
+        output += char
+        box.markdown(output + "▌")
+        time.sleep(0.005)
+    box.markdown(output)
+    return output
+
+# ---------------- CSV INGEST ---------------- #
+st.sidebar.header("📂 Upload Dataset")
+
+file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
+
+if file and st.sidebar.button("Generate Embeddings"):
+    df = pd.read_csv(file)
+
+    for _, row in df.iterrows():
+        text = f"Q: {row['question']} A: {row['answer']}"
+
+        collection.add(
+            documents=[text],
+            embeddings=[embed_model.encode(text).tolist()],
+            ids=[str(uuid.uuid4())]
+        )
+
+    st.sidebar.success("✅ Data embedded successfully!")
+
+# ---------------- DISPLAY CHAT ---------------- #
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-        # 👍 👎 FEEDBACK FIXED HERE
         if msg["role"] == "assistant":
-
-            msg_id = msg["id"]
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                if st.button("👍 Helpful", key=f"up_{msg_id}"):
-                    st.session_state.feedback[msg_id] = "positive"
-                    st.success("Thanks for feedback 👍")
-
-            with col2:
-                if st.button("👎 Not Helpful", key=f"down_{msg_id}"):
-                    st.session_state.feedback[msg_id] = "negative"
-                    st.warning("Feedback recorded 👎")
+            with st.expander("🧠 Trace + Confidence"):
+                for t in msg["trace"]:
+                    st.write("-", t)
+                st.write("Confidence:", msg["confidence"])
 
 # ---------------- INPUT ---------------- #
-query = st.chat_input("Ask your support question...")
+query = st.chat_input("Ask your question...")
 
 if query:
+    start = time.time()
 
-    # store user message
     st.session_state.messages.append({
-        "id": str(uuid.uuid4()),
         "role": "user",
         "content": query
     })
 
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = agent(query)
+        response, trace, confidence = agent(query)
+        output = stream(response)
 
-        final_text = stream_text(response)
+    latency = round(time.time() - start, 2)
 
-    # store assistant message
+    msg_id = str(uuid.uuid4())
+
     st.session_state.messages.append({
-        "id": str(uuid.uuid4()),
+        "id": msg_id,
         "role": "assistant",
-        "content": final_text
+        "content": output,
+        "trace": trace,
+        "confidence": confidence,
+        "latency": latency
     })
 
+    # -------- FEEDBACK -------- #
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("👍 Helpful", key=f"up_{msg_id}"):
+            st.session_state.feedback[msg_id] = "positive"
+
+    with col2:
+        if st.button("👎 Not Helpful", key=f"down_{msg_id}"):
+            st.session_state.feedback[msg_id] = "negative"
+
     st.rerun()
+
+# ---------------- RAG vs NO RAG (IMPORTANT) ---------------- #
+st.sidebar.header("📊 RAG Comparison")
+
+if st.sidebar.button("Compare RAG vs LLM"):
+    test_query = "How to reset password?"
+
+    rag_resp, _, _ = agent(test_query)
+    llm_resp = llm_tool(test_query)
+
+    st.sidebar.write("Query:", test_query)
+    st.sidebar.write("With RAG:", rag_resp)
+    st.sidebar.write("Without RAG:", llm_resp)
+
+# ---------------- EVALUATION ---------------- #
+st.sidebar.header("🧪 Evaluation")
+
+if st.sidebar.button("Run Tests"):
+    tests = [
+        "reset password",
+        "refund time",
+        "hack account",
+        "urgent issue"
+    ]
+
+    results = []
+
+    for t in tests:
+        resp, _, conf = agent(t)
+        results.append({
+            "query": t,
+            "response": resp,
+            "confidence": conf
+        })
+
+    st.sidebar.write(pd.DataFrame(results))
