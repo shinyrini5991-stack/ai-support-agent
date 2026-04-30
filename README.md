@@ -1,94 +1,246 @@
 # 🤖 AI Support Resolution Agent
 
-## 📌 Project Overview
-This is an AI-powered customer support agent built using LangChain and Groq API.  
-It helps users resolve support queries like account issues, billing problems, and technical support.
+An intelligent **Customer Support AI Agent** designed to automate real-world support workflows using LLMs, Retrieval-Augmented Generation (RAG), and tool-based reasoning.
 
 ---
 
-## ⚙️ Features
-- Natural language customer support
-- Safe response handling (refuses harmful requests)
-- Knowledge-based responses (RAG-style logic)
-- Escalation for unresolved issues
-- No personal data storage
+## 🚀 Project Overview
+
+This project simulates a **real customer support system** where users can:
+
+* Ask support-related questions
+* Get accurate answers from a knowledge base
+* Receive safe, policy-compliant responses
+* Escalate sensitive issues to human support
+
+The system is built with a strong focus on:
+
+* ✅ Reliability
+* ✅ Explainability
+* ✅ Safety-first behaviour
+* ✅ Practical usability
 
 ---
 
-## 🧠 Tech Stack
-- Python
-- LangChain
-- Groq LLM (Llama 3.1)
-- dotenv (.env for API key)
+## 👤 User Persona
+
+**Primary User:**
+Customers seeking help with:
+
+* Account issues
+* Payments & refunds
+* Subscriptions
+* Delivery problems
 
 ---
 
-## 📁 Project Structure
-ai-support-agent/
-│
-├── app.py
-├── .env
-└── README.md
+## 🎯 Problem Statement
 
+Customer support teams face:
 
----
+* High volume of repetitive queries
+* Delayed responses
+* Inconsistent answers
 
-## 🔐 Setup Instructions
+👉 This AI agent solves these problems by:
 
-### 1. Install dependencies
-- pip install langchain langchain-groq python-dotenv
-
-
-### 2. Add API Key
-Create `.env` file:
-
-
-### 3. Run the project
-python app.py
-
+* Automating responses
+* Using knowledge grounding (RAG)
+* Ensuring safe and controlled outputs
 
 ---
 
-## 💬 Example Queries
-- "How do I reset my password?"
-- "I was charged twice"
-- "My account is locked"
-- "Hack my account" ❌ (will be refused)
+## 🧠 System Architecture
+
+```mermaid
+flowchart TD
+    A[User Input] --> B[Safety Check]
+    B --> C{Unsafe?}
+    C -- Yes --> D[Block Request]
+    C -- No --> E[Retriever (Chroma DB)]
+    E --> F{KB Match?}
+    F -- Yes --> G[Return KB Answer]
+    F -- No --> H{Urgent?}
+    H -- Yes --> I[Escalate to Human]
+    H -- No --> J[LLM (Groq)]
+    J --> K[Final Response]
+```
 
 ---
 
-## 🛡️ Safety Features
-- Refuses unsafe or illegal requests
-- Does not hallucinate policies
-- Escalates unresolved issues
-- Does not store personal data
+## ⚙️ Tech Stack
+
+* **LLM**: Groq (LLaMA models)
+* **Framework**: LangChain
+* **Vector DB**: Chroma
+* **Embeddings**: Sentence Transformers
+* **UI**: Streamlit
+* **Language**: Python
+
+---
+
+## 🧩 Features
+
+### ✅ Core Capabilities
+
+* LLM-based intelligent responses
+* Retrieval-Augmented Generation (RAG)
+* CSV-based knowledge ingestion
+* Semantic search using embeddings
+
+### 🔐 Safety Features
+
+* Blocks unsafe queries (fraud, hacking, etc.)
+* No hallucinated policies
+* Escalates sensitive issues
+* No personal data stored
+
+### 🛠 Tool-Based Architecture
+
+* KB Retrieval Tool
+* LLM Response Tool
+* Escalation Tool
+
+### 🧠 Explainability
+
+* Step-by-step trace of reasoning
+* Confidence levels (High / Medium / Low)
+
+### 💬 User Experience
+
+* Chat interface (Streamlit)
+* Streaming responses
+* Feedback system (👍 / 👎)
+
+---
+
+## 📂 Dataset Preparation
+
+A structured **customer support knowledge base** is used:
+
+```csv
+id,question,answer
+1,How do I reset my password?,Go to Settings → Account → Reset Password.
+2,Refund time,Refunds are processed within 5–7 days.
+3,Cancel subscription,Go to Settings → Subscription → Cancel.
+```
+
+👉 Data is:
+
+* Embedded using sentence transformers
+* Stored in Chroma vector database
+* Retrieved using semantic similarity
+
+---
+
+## 🔄 Workflow
+
+1. User submits query
+2. Safety check is applied
+3. System searches knowledge base (RAG)
+4. If found → return grounded answer
+5. Else → use LLM
+6. If sensitive → escalate
+
+---
+
+## 📊 RAG vs Non-RAG Comparison
+
+| Query          | Without RAG    | With RAG            |
+| -------------- | -------------- | ------------------- |
+| Reset password | Generic answer | Exact steps from KB |
+| Refund time    | Approximate    | Accurate (5–7 days) |
+
+---
+
+## 🧪 Evaluation
+
+### Test Scenarios
+
+* Password reset
+* Refund query
+* Unsafe request (hack account)
+* Urgent escalation
+
+### Metrics
+
+* Response accuracy
+* Safety compliance
+* Latency
+* Consistency
+
+---
+
+## ⚠️ Limitations
+
+* Limited dataset size
+* No real backend integration
+* Basic memory (session-based only)
+* No advanced multi-agent orchestration
 
 ---
 
 ## 🚀 Future Improvements
-- Add full RAG with vector database
-- Add Streamlit UI chatbot
-- Add ticketing system integration
 
-## 🏗️ System Architecture
+* Add full conversation memory
+* Integrate real backend APIs
+* Use advanced orchestration (LangGraph / CrewAI)
+* Improve retrieval with chunking
+* Add confidence scoring model
 
-```mermaid
-flowchart TD
+---
 
-A["User Query"] --> B["Input Handler"]
-B --> C["Safety Filter"]
-C --> D{"Unsafe Request?"}
+## ▶️ How to Run
 
-D -- Yes --> E["Refuse Response"]
-D -- No --> F["Intent Detection"]
+```bash
+pip install streamlit langchain-groq sentence-transformers chromadb python-dotenv pandas
+streamlit run app.py
+```
 
-F --> G["Retriever (RAG)"]
-G --> H{"Relevant Info Found?"}
+---
 
-H -- Yes --> I["Return KB Answer"]
-H -- No --> J["Groq LLM"]
+## 🔑 Environment Setup
 
-J --> K["Response Generator"]
-I --> K
+Create `.env` file:
 
-K --> L["User Output"]
+```env
+GROQ_API_KEY=your_api_key_here
+```
+
+---
+
+## 📦 Project Structure
+
+```
+ai-support-agent/
+│
+├── app.py
+├── support_kb.csv
+├── README.md
+├── requirements.txt
+└── .env
+```
+
+---
+
+## 🎯 Success Criteria
+
+* Accurate responses from KB
+* Safe handling of harmful queries
+* Proper escalation when needed
+* Clear explainability (trace + confidence)
+
+---
+
+## 📌 Conclusion
+
+This project demonstrates a **production-style AI support agent** that combines:
+
+* LLM reasoning
+* Knowledge retrieval
+* Safety-first design
+* Explainable decision-making
+
+👉 Making it suitable for real-world customer support automation.
+
+---
