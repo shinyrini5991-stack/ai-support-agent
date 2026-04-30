@@ -78,41 +78,53 @@ Rules:
 User Query: {query}
 """
         return llm.invoke(prompt).content
-    except:
-        return "⚠️ System error. Escalating to human support."
+
+    # ✅ Improved error handling
+    except Exception as e:
+        return f"⚠️ LLM error: {str(e)}. Escalating to human support."
 
 
 def escalation_tool(query):
     return "⚠️ This issue is escalated to human support."
 
-# ---------------- AGENT ---------------- #
+# ---------------- AGENT (UPDATED - PHASE 5 COMPLETE) ---------------- #
 
-def agent(query):
+def agent(query, step=0):
     trace = []
     confidence = "Low"
 
-    # Safety
+    # 🔁 LOOP PREVENTION
+    if step > 3:
+        return "⚠️ Too many steps. Escalating to human support.", ["Loop detected"], "High"
+
+    # 🔐 SAFETY CHECK
     if is_unsafe(query):
-        return "❌ Unsafe request blocked.", ["Safety triggered"], "High"
+        trace.append("❌ Safety triggered → Unsafe query blocked")
+        return "❌ Unsafe request blocked.", trace, "High"
 
-    trace.append("Safety passed")
+    trace.append("✅ Safety check passed")
 
-    # RAG
+    # 📘 TOOL 1: KB (RAG)
     kb_result = kb_tool(query)
     if kb_result:
-        trace.append("KB tool used (RAG)")
+        trace.append("🛠 Tool Selected: KB Tool (RAG)")
+        trace.append("📄 Reason: Found relevant answer in knowledge base")
         return f"📘 {kb_result}", trace, "High"
 
-    trace.append("No KB match")
+    trace.append("❌ No KB match found")
 
-    # Escalation condition
+    # 🚨 TOOL 2: ESCALATION
     if "urgent" in query.lower():
-        trace.append("Escalation tool used")
+        trace.append("🛠 Tool Selected: Escalation Tool")
+        trace.append("📄 Reason: Query marked as urgent")
         return escalation_tool(query), trace, "High"
 
-    # LLM fallback
-    trace.append("LLM tool used")
-    return llm_tool(query), trace, "Medium"
+    # 🤖 TOOL 3: LLM
+    trace.append("🛠 Tool Selected: LLM Tool")
+    trace.append("📄 Reason: No KB match, fallback to LLM")
+
+    response = llm_tool(query)
+    return response, trace, "Medium"
 
 # ---------------- STREAMING ---------------- #
 def stream(text):
@@ -143,6 +155,43 @@ if file and st.sidebar.button("Generate Embeddings"):
         )
 
     st.sidebar.success("✅ Data embedded successfully!")
+
+# ---------------- TOOL DEMONSTRATION (PHASE 5 REQUIREMENT) ---------------- #
+
+st.sidebar.header("⚠️ Tool Evaluation")
+
+# ❌ Incorrect tool usage demo
+if st.sidebar.button("Test Incorrect Tool Usage"):
+    test_query = "How do I reset my password?"
+
+    wrong = llm_tool(test_query)  # forcing wrong tool
+    correct, trace, _ = agent(test_query)
+
+    st.sidebar.write("Query:", test_query)
+    st.sidebar.write("❌ Wrong Tool (LLM):", wrong)
+    st.sidebar.write("✅ Correct Tool (KB):", correct)
+
+    st.sidebar.write("🧠 Trace:")
+    for t in trace:
+        st.sidebar.write("-", t)
+
+# ✅ Correct tool usage demo
+if st.sidebar.button("Test Tool Selection"):
+    test_queries = [
+        "reset password",
+        "urgent account issue",
+        "what is AI?"
+    ]
+
+    for q in test_queries:
+        resp, trace, conf = agent(q)
+
+        st.sidebar.write("------")
+        st.sidebar.write("Query:", q)
+        st.sidebar.write("Response:", resp)
+        st.sidebar.write("Confidence:", conf)
+        for t in trace:
+            st.sidebar.write("-", t)
 
 # ---------------- DISPLAY CHAT ---------------- #
 for msg in st.session_state.messages:
@@ -183,7 +232,7 @@ if query:
         "latency": latency
     })
 
-    # -------- FEEDBACK -------- #
+    # 👍👎 Feedback
     col1, col2 = st.columns(2)
 
     with col1:
@@ -196,7 +245,7 @@ if query:
 
     st.rerun()
 
-# ---------------- RAG vs NO RAG (IMPORTANT) ---------------- #
+# ---------------- RAG vs NO RAG ---------------- #
 st.sidebar.header("📊 RAG Comparison")
 
 if st.sidebar.button("Compare RAG vs LLM"):
