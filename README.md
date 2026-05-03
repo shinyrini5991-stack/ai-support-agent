@@ -1,246 +1,325 @@
-# 🤖 AI Support Resolution Agent
+🤖 AI Support Resolution Agent
+An intelligent, end-to-end AI-powered customer support system that combines LLM reasoning, Retrieval-Augmented Generation (RAG), tool usage, memory, and adaptive learning to deliver accurate, safe, and explainable responses.
 
-An intelligent **Customer Support AI Agent** designed to automate real-world support workflows using LLMs, Retrieval-Augmented Generation (RAG), and tool-based reasoning.
+🚀 Features
+🧠 Core Capabilities
 
----
 
-## 🚀 Project Overview
+✅ LLM-based response generation (via Groq)
 
-This project simulates a **real customer support system** where users can:
 
-* Ask support-related questions
-* Get accurate answers from a knowledge base
-* Receive safe, policy-compliant responses
-* Escalate sensitive issues to human support
+✅ Retrieval-Augmented Generation (RAG) using embeddings
 
-The system is built with a strong focus on:
 
-* ✅ Reliability
-* ✅ Explainability
-* ✅ Safety-first behaviour
-* ✅ Practical usability
+✅ Vector database with ChromaDB
 
----
 
-## 👤 User Persona
+✅ Intelligent tool selection (KB / LLM / Escalation)
 
-**Primary User:**
-Customers seeking help with:
 
-* Account issues
-* Payments & refunds
-* Subscriptions
-* Delivery problems
+✅ Multi-turn conversation with memory
 
----
 
-## 🎯 Problem Statement
+✅ Real-time streaming responses
 
-Customer support teams face:
 
-* High volume of repetitive queries
-* Delayed responses
-* Inconsistent answers
 
-👉 This AI agent solves these problems by:
+🛠️ Advanced Engineering Features
 
-* Automating responses
-* Using knowledge grounding (RAG)
-* Ensuring safe and controlled outputs
 
----
+✅ Safety filtering (blocks malicious queries)
 
-## 🧠 System Architecture
 
-```mermaid
-flowchart TD
-    A[User Input] --> B[Safety Check]
-    B --> C{Unsafe?}
-    C -- Yes --> D[Block Request]
-    C -- No --> E[Retriever (Chroma DB)]
-    E --> F{KB Match?}
-    F -- Yes --> G[Return KB Answer]
-    F -- No --> H{Urgent?}
-    H -- Yes --> I[Escalate to Human]
-    H -- No --> J[LLM (Groq)]
-    J --> K[Final Response]
-```
+✅ Adaptive learning from feedback (👍 / 👎)
 
----
 
-## ⚙️ Tech Stack
+✅ Explainability (trace + confidence)
 
-* **LLM**: Groq (LLaMA models)
-* **Framework**: LangChain
-* **Vector DB**: Chroma
-* **Embeddings**: Sentence Transformers
-* **UI**: Streamlit
-* **Language**: Python
 
----
+✅ Latency tracking & logging
 
-## 🧩 Features
 
-### ✅ Core Capabilities
+✅ Failure handling & graceful fallback
 
-* LLM-based intelligent responses
-* Retrieval-Augmented Generation (RAG)
-* CSV-based knowledge ingestion
-* Semantic search using embeddings
 
-### 🔐 Safety Features
 
-* Blocks unsafe queries (fraud, hacking, etc.)
-* No hallucinated policies
-* Escalates sensitive issues
-* No personal data stored
+📊 Evaluation & Testing
 
-### 🛠 Tool-Based Architecture
 
-* KB Retrieval Tool
-* LLM Response Tool
-* Escalation Tool
+✅ RAG vs LLM comparison
 
-### 🧠 Explainability
 
-* Step-by-step trace of reasoning
-* Confidence levels (High / Medium / Low)
+✅ Tool usage validation
 
-### 💬 User Experience
 
-* Chat interface (Streamlit)
-* Streaming responses
-* Feedback system (👍 / 👎)
+✅ Automated evaluation metrics
 
----
 
-## 📂 Dataset Preparation
+✅ Failure analysis dashboard
 
-A structured **customer support knowledge base** is used:
 
-```csv
-id,question,answer
-1,How do I reset my password?,Go to Settings → Account → Reset Password.
-2,Refund time,Refunds are processed within 5–7 days.
-3,Cancel subscription,Go to Settings → Subscription → Cancel.
-```
+✅ Safety enforcement testing
 
-👉 Data is:
 
-* Embedded using sentence transformers
-* Stored in Chroma vector database
-* Retrieved using semantic similarity
 
----
+🧱 System Architecture
+User Query   ↓Safety Check   ↓Memory Context Injection   ↓Adaptive Feedback Check   ↓Tool Selection:   ├── Knowledge Base (RAG)   ├── Escalation Tool   └── LLM (Fallback)   ↓Streaming Response   ↓Feedback Collection (👍 / 👎)   ↓Adaptive Learning Update
 
-## 🔄 Workflow
+⚙️ Tech Stack
 
-1. User submits query
-2. Safety check is applied
-3. System searches knowledge base (RAG)
-4. If found → return grounded answer
-5. Else → use LLM
-6. If sensitive → escalate
 
----
+Frontend/UI: Streamlit
 
-## 📊 RAG vs Non-RAG Comparison
 
-| Query          | Without RAG    | With RAG            |
-| -------------- | -------------- | ------------------- |
-| Reset password | Generic answer | Exact steps from KB |
-| Refund time    | Approximate    | Accurate (5–7 days) |
+LLM: Groq (LLaMA 3.1 8B Instant)
 
----
 
-## 🧪 Evaluation
+Embeddings: sentence-transformers (MiniLM)
 
-### Test Scenarios
 
-* Password reset
-* Refund query
-* Unsafe request (hack account)
-* Urgent escalation
+Vector DB: ChromaDB
 
-### Metrics
 
-* Response accuracy
-* Safety compliance
-* Latency
-* Consistency
+Language: Python
 
----
 
-## ⚠️ Limitations
+Logging: Python logging module
 
-* Limited dataset size
-* No real backend integration
-* Basic memory (session-based only)
-* No advanced multi-agent orchestration
 
----
 
-## 🚀 Future Improvements
+📂 Project Structure
+ai-support-agent/│├── app.py                # Main Streamlit application├── .env                  # API keys (not committed)├── agent_logs.log        # Runtime logs├── requirements.txt      # Dependencies└── README.md             # Project documentation
 
-* Add full conversation memory
-* Integrate real backend APIs
-* Use advanced orchestration (LangGraph / CrewAI)
-* Improve retrieval with chunking
-* Add confidence scoring model
+🔧 Installation & Setup
+1️⃣ Clone the Repository
+git clone https://github.com/your-username/ai-support-agent.gitcd ai-support-agent
 
----
+2️⃣ Install Dependencies
+pip install -r requirements.txt
 
-## ▶️ How to Run
-
-```bash
-pip install streamlit langchain-groq sentence-transformers chromadb python-dotenv pandas
-streamlit run app.py
-```
-
----
-
-## 🔑 Environment Setup
-
-Create `.env` file:
-
-```env
+3️⃣ Setup Environment Variables
+Create a .env file:
 GROQ_API_KEY=your_api_key_here
-```
 
----
+4️⃣ Run the Application
+streamlit run app.py
 
-## 📦 Project Structure
+📂 Dataset Format (IMPORTANT)
+Upload a CSV file with:
+question,answerHow to reset password?,Go to settings and click reset passwordWhat is refund time?,Refund takes 5-7 business days
+Then click:
+👉 “Generate Embeddings”
 
-```
-ai-support-agent/
-│
-├── app.py
-├── support_kb.csv
-├── README.md
-├── requirements.txt
-└── .env
-```
+🧠 How It Works
+1. Safety Layer
 
----
 
-## 🎯 Success Criteria
+Blocks harmful queries like:
 
-* Accurate responses from KB
-* Safe handling of harmful queries
-* Proper escalation when needed
-* Clear explainability (trace + confidence)
 
----
+"hack account"
 
-## 📌 Conclusion
 
-This project demonstrates a **production-style AI support agent** that combines:
+"fraud payment"
 
-* LLM reasoning
-* Knowledge retrieval
-* Safety-first design
-* Explainable decision-making
 
-👉 Making it suitable for real-world customer support automation.
 
----
+
+
+2. Memory System
+
+
+Stores last 10 interactions
+
+
+Improves multi-turn conversations
+
+
+
+3. Retrieval (RAG)
+
+
+Uses embeddings + similarity search
+
+
+Applies threshold filtering to avoid wrong matches
+
+
+
+4. Tool Selection Logic
+ConditionTool UsedRelevant KB found📘 KB ToolUrgent query⚠️ EscalationNo KB match🤖 LLM
+
+5. Adaptive Learning (Phase 7)
+
+
+👍 Positive → reinforces behavior
+
+
+👎 Negative → avoids similar responses
+
+
+
+6. Explainability
+Each response includes:
+
+
+🧠 Trace (decision steps)
+
+
+📊 Confidence level
+
+
+
+📊 Evaluation Features
+✅ RAG vs LLM Comparison
+Compare:
+
+
+Knowledge-based answers
+
+
+Pure LLM responses
+
+
+
+✅ Full Evaluation Metrics
+Measures:
+
+
+Accuracy
+
+
+Tool selection correctness
+
+
+Safety enforcement
+
+
+
+✅ Failure Analysis
+Identifies:
+
+
+Missing KB data
+
+
+Weak prompts
+
+
+Escalation cases
+
+
+
+✅ Safety Testing
+Tests system against:
+
+
+Malicious queries
+
+
+Unsafe requests
+
+
+
+🧪 Example Queries
+QueryExpected Behaviorreset passwordKB responserefund delayKB responsehack accountBlocked ❌urgent issueEscalated ⚠️what is AILLM response
+
+⚠️ Known Limitations
+
+
+Small dataset → limited KB accuracy
+
+
+Embedding similarity may need tuning
+
+
+No external API/tool integration yet
+
+
+Local deployment only (no cloud hosting)
+
+
+
+🔮 Future Improvements
+
+
+PDF/document ingestion
+
+
+Hybrid search (keyword + semantic)
+
+
+Reranking for better retrieval
+
+
+Cloud deployment (AWS / Azure)
+
+
+Multi-agent frameworks (LangGraph, CrewAI)
+
+
+
+📌 Engineering Decisions
+FeatureWhyRAGImproves factual accuracyTool-based agentStructured decision makingMemoryBetter conversation qualityFeedback loopReal-world adaptabilityLoggingDebugging & monitoring
+
+🛡️ Safety Design
+
+
+Keyword-based filtering
+
+
+Escalation for sensitive queries
+
+
+Strict prompt mode for safe responses
+
+
+
+📈 Key Achievements
+✔ End-to-end AI agent
+✔ Real-time streaming UI
+✔ Adaptive learning system
+✔ Explainable decision-making
+✔ Evaluation + metrics dashboard
+
+🏁 Conclusion
+This project demonstrates a production-ready AI support system that balances:
+
+
+Intelligence (LLM + RAG)
+
+
+Reliability (tool logic + safety)
+
+
+Usability (UI + streaming)
+
+
+Adaptability (feedback learning)
+
+
+👉 Built for real-world customer support workflows, not just theoretical performance.
+
+🙌 Acknowledgements
+
+
+Groq API
+
+
+Sentence Transformers
+
+
+ChromaDB
+
+
+Streamlit
+
+
+
+⭐ If you like this project
+Give it a ⭐ on GitHub!
+
+If you want next:
+👉 I can generate requirements.txt
+👉 Or architecture diagram (Mermaid fixed for GitHub)
+👉 Or final submission PDF (ready to upload)
